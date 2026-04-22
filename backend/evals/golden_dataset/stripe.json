@@ -1,0 +1,23 @@
+{
+  "company_name": "Stripe",
+  "ground_truth": {
+    "market": {
+      "tam_range_usd_bn": [500, 1000],
+      "key_segments": ["online payments", "payment infrastructure", "fintech developer tools"],
+      "growth_rate_pct_min": 10
+    },
+    "financial": {
+      "total_raised_usd_bn_min": 8,
+      "known_investors": ["Sequoia Capital", "Andreessen Horowitz", "General Catalyst"],
+      "last_known_valuation_usd_bn_min": 50
+    },
+    "competitors": {
+      "must_include_any": ["PayPal", "Braintree", "Adyen", "Square", "Checkout.com", "Worldpay", "Shopify Payments"],
+      "min_competitors_found": 3
+    },
+    "risks": {
+      "expected_risk_topics": ["regulatory", "competition", "fraud", "financial services licensing"],
+      "min_topics_covered": 2
+    }
+  }
+}

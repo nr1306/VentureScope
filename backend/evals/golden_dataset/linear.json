@@ -1,0 +1,23 @@
+{
+  "company_name": "Linear",
+  "ground_truth": {
+    "market": {
+      "tam_range_usd_bn": [5, 20],
+      "key_segments": ["project management", "issue tracking", "developer tools", "engineering workflow"],
+      "growth_rate_pct_min": 20
+    },
+    "financial": {
+      "total_raised_usd_mm_min": 50,
+      "known_investors": ["Sequoia Capital", "Accel"],
+      "last_known_valuation_usd_mm_min": 400
+    },
+    "competitors": {
+      "must_include_any": ["Jira", "Asana", "GitHub Issues", "Shortcut", "ClickUp", "Monday.com"],
+      "min_competitors_found": 3
+    },
+    "risks": {
+      "expected_risk_topics": ["Jira dominance", "enterprise sales motion", "pricing", "developer tool consolidation"],
+      "min_topics_covered": 2
+    }
+  }
+}

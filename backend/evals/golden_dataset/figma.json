@@ -1,0 +1,23 @@
+{
+  "company_name": "Figma",
+  "ground_truth": {
+    "market": {
+      "tam_range_usd_bn": [10, 30],
+      "key_segments": ["UI/UX design tools", "collaborative design", "product design software"],
+      "growth_rate_pct_min": 10
+    },
+    "financial": {
+      "total_raised_usd_mm_min": 300,
+      "known_investors": ["Index Ventures", "Greylock", "Kleiner Perkins", "Sequoia Capital"],
+      "last_known_valuation_usd_bn_min": 10
+    },
+    "competitors": {
+      "must_include_any": ["Sketch", "Adobe XD", "InVision", "Framer", "Canva", "Adobe"],
+      "min_competitors_found": 3
+    },
+    "risks": {
+      "expected_risk_topics": ["Adobe acquisition", "competition", "enterprise adoption", "pricing"],
+      "min_topics_covered": 2
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "company_name": "Notion",
+  "ground_truth": {
+    "market": {
+      "tam_range_usd_bn": [20, 60],
+      "key_segments": ["productivity software", "knowledge management", "collaboration tools"],
+      "growth_rate_pct_min": 15
+    },
+    "financial": {
+      "total_raised_usd_mm_min": 300,
+      "known_investors": ["Index Ventures", "Sequoia Capital", "Coatue"],
+      "last_known_valuation_usd_bn_min": 8
+    },
+    "competitors": {
+      "must_include_any": ["Confluence", "Coda", "Obsidian", "Roam Research", "Airtable", "Google Docs", "Microsoft OneNote"],
+      "min_competitors_found": 3
+    },
+    "risks": {
+      "expected_risk_topics": ["competition from Microsoft", "competition from Google", "pricing pressure", "enterprise sales"],
+      "min_topics_covered": 2
+    }
+  }
+}

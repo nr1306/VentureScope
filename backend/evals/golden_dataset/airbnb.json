@@ -1,0 +1,24 @@
+{
+  "company_name": "Airbnb",
+  "ground_truth": {
+    "market": {
+      "tam_range_usd_bn": [100, 500],
+      "key_segments": ["short-term rentals", "travel accommodation", "experiences"],
+      "growth_rate_pct_min": 5
+    },
+    "financial": {
+      "public_company": true,
+      "ticker": "ABNB",
+      "revenue_usd_bn_min": 8,
+      "profitable": true
+    },
+    "competitors": {
+      "must_include_any": ["Vrbo", "Booking.com", "Expedia", "Hotels.com", "Marriott", "Hilton"],
+      "min_competitors_found": 3
+    },
+    "risks": {
+      "expected_risk_topics": ["regulatory", "host supply", "macro travel", "competition from hotels"],
+      "min_topics_covered": 2
+    }
+  }
+}

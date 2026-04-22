@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Token palette ─────────────────────────────────────────────────────────── */
+:root {
+  --bg:          #0a0d14;
+  --bg-2:        #111827;
+  --bg-3:        #1e293b;
+  --border:      #1e293b;
+  --border-2:    #334155;
+  --text-1:      #f1f5f9;
+  --text-2:      #94a3b8;
+  --text-3:      #64748b;
+  --blue:        #2563eb;
+  --blue-lt:     #3b82f6;
+}
+
+html.light {
+  --bg:          #f1f5f9;
+  --bg-2:        #ffffff;
+  --bg-3:        #e2e8f0;
+  --border:      #e2e8f0;
+  --border-2:    #cbd5e1;
+  --text-1:      #0f172a;
+  --text-2:      #334155;
+  --text-3:      #64748b;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ── Light-mode overrides for Tailwind slate classes ──────────────────────── */
+
+/* Backgrounds */
+html.light .bg-\[#0a0d14\]    { background-color: #f1f5f9; }
+html.light .bg-\[#0f1117\]    { background-color: #f1f5f9; }
+html.light .bg-slate-900\/50   { background-color: rgba(255,255,255,0.85) !important; }
+html.light .bg-slate-900\/30   { background-color: rgba(248,250,252,0.8) !important; }
+html.light .bg-slate-900\/20   { background-color: rgba(248,250,252,0.6) !important; }
+html.light .bg-slate-800       { background-color: #ffffff !important; }
+html.light .bg-slate-800\/80   { background-color: rgba(255,255,255,0.9) !important; }
+html.light .bg-slate-800\/70   { background-color: rgba(255,255,255,0.85) !important; }
+html.light .bg-slate-800\/60   { background-color: rgba(255,255,255,0.8) !important; }
+html.light .bg-slate-800\/50   { background-color: rgba(255,255,255,0.75) !important; }
+html.light .bg-slate-800\/40   { background-color: rgba(255,255,255,0.6) !important; }
+html.light .bg-slate-700\/50   { background-color: rgba(226,232,240,0.7) !important; }
+html.light .bg-slate-700\/40   { background-color: rgba(226,232,240,0.5) !important; }
+html.light .bg-slate-700       { background-color: #e2e8f0 !important; }
+
+/* Borders */
+html.light .border-slate-800   { border-color: #e2e8f0 !important; }
+html.light .border-slate-800\/80 { border-color: rgba(226,232,240,0.8) !important; }
+html.light .border-slate-700   { border-color: #cbd5e1 !important; }
+html.light .border-slate-700\/60 { border-color: rgba(203,213,225,0.6) !important; }
+html.light .border-slate-600   { border-color: #94a3b8 !important; }
+
+/* Text */
+html.light .text-white         { color: #0f172a !important; }
+html.light .text-slate-200     { color: #1e293b !important; }
+html.light .text-slate-300     { color: #334155 !important; }
+html.light .text-slate-400     { color: #475569 !important; }
+html.light .text-slate-500     { color: #64748b !important; }
+
+/* Hover bg */
+html.light .hover\:bg-slate-800\/70:hover  { background-color: rgba(241,245,249,0.9) !important; }
+html.light .hover\:bg-slate-700\/50:hover  { background-color: rgba(226,232,240,0.6) !important; }
+html.light .hover\:bg-slate-700\/40:hover  { background-color: rgba(226,232,240,0.5) !important; }
+html.light .hover\:bg-slate-800\/30:hover  { background-color: rgba(241,245,249,0.5) !important; }
+html.light .hover\:border-slate-500:hover  { border-color: #94a3b8 !important; }
+html.light .hover\:text-white:hover        { color: #0f172a !important; }
+
+/* Nav backdrop */
+html.light nav { background-color: rgba(248,250,252,0.9) !important; border-color: #e2e8f0 !important; }
+
+/* Radial glow: hide in light mode */
+html.light .bg-blue-600\/5 { opacity: 0 !important; }
+
+/* Input */
+html.light input[type="text"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html.light input[type="text"]::placeholder { color: #94a3b8 !important; }
+html.light input[type="text"]:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1px #2563eb !important;
+}
+
+/* Agent cards — lighten gradient backgrounds */
+html.light .from-blue-600\/20   { --tw-gradient-from: rgba(219,234,254,0.8) !important; }
+html.light .to-blue-900\/10     { --tw-gradient-to:   rgba(219,234,254,0.3) !important; }
+html.light .border-blue-700\/50 { border-color: rgba(147,197,253,0.6) !important; }
+
+html.light .from-purple-600\/20  { --tw-gradient-from: rgba(243,232,255,0.8) !important; }
+html.light .to-purple-900\/10    { --tw-gradient-to:   rgba(243,232,255,0.3) !important; }
+html.light .border-purple-700\/50 { border-color: rgba(216,180,254,0.6) !important; }
+
+html.light .from-cyan-600\/20   { --tw-gradient-from: rgba(207,250,254,0.8) !important; }
+html.light .to-cyan-900\/10     { --tw-gradient-to:   rgba(207,250,254,0.3) !important; }
+html.light .border-cyan-700\/50 { border-color: rgba(103,232,249,0.6) !important; }
+
+html.light .from-orange-600\/20  { --tw-gradient-from: rgba(255,237,213,0.8) !important; }
+html.light .to-orange-900\/10    { --tw-gradient-to:   rgba(255,237,213,0.3) !important; }
+html.light .border-orange-700\/50 { border-color: rgba(253,186,116,0.6) !important; }
+
+/* Progress bars */
+html.light .bg-slate-700 { background-color: #e2e8f0 !important; }
+
+/* Ring / focus */
+html.light .ring-white\/20 { --tw-ring-color: rgba(148,163,184,0.3) !important; }
+
+/* Confidence bar track */
+html.light [class*="h-1"][class*="bg-slate-7"] { background-color: #e2e8f0 !important; }
+html.light [class*="h-1\.5"][class*="bg-slate-7"] { background-color: #e2e8f0 !important; }
+
+/* Scrollbar */
+html.light ::-webkit-scrollbar { background: #f1f5f9; }
+html.light ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
