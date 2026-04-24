@@ -4,12 +4,17 @@ Converts a query to an embedding then fetches the top-k closest chunks.
 """
 from __future__ import annotations
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db.models import DocumentChunk
-from rag.embedder import embed_single
+from db.session import execute_with_retry
+from rag.embedder import EmbeddingError, embed_single
+
+
+class RetrievalError(RuntimeError):
+    """Raised when document retrieval fails."""
 
 
 async def retrieve(
@@ -22,8 +27,19 @@ async def retrieve(
     Return top_k chunks most similar to query for the given company namespace.
     Each result: {"chunk_id", "content", "score", "filename", "chunk_index"}
     """
-    top_k = top_k or settings.retrieval_top_k
-    query_embedding = await embed_single(query)
+    normalized_company = company_name.strip()
+    normalized_query = query.strip()
+    if not normalized_company:
+        return []
+    if not normalized_query:
+        raise RetrievalError("Retrieval query cannot be empty.")
+
+    top_k = max(1, min(top_k or settings.retrieval_top_k, 20))
+
+    try:
+        query_embedding = await embed_single(normalized_query)
+    except EmbeddingError as exc:
+        raise RetrievalError(f"Failed to embed retrieval query: {exc}") from exc
 
     # pgvector cosine distance: <=> operator (lower = more similar)
     stmt = (
@@ -33,12 +49,16 @@ async def retrieve(
             DocumentChunk.metadata_,
             (1 - DocumentChunk.embedding.cosine_distance(query_embedding)).label("score"),
         )
-        .where(DocumentChunk.company_name == company_name)
+        .where(DocumentChunk.company_name == normalized_company)
         .order_by(DocumentChunk.embedding.cosine_distance(query_embedding))
         .limit(top_k)
     )
 
-    result = await db.execute(stmt)
+    try:
+        result = await execute_with_retry(db, stmt)
+    except Exception as exc:
+        raise RetrievalError(f"Document retrieval query failed: {exc}") from exc
+
     rows = result.all()
     return [
         {

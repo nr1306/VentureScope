@@ -3,7 +3,7 @@ from typing import Any
 
 from agents.base import BaseAgent
 from tools.web_search import WEB_SEARCH_TOOL, run_web_search
-from tools.document_retriever import DOCUMENT_RETRIEVER_TOOL, format_retrieval_results
+from tools.document_retriever import DOCUMENT_RETRIEVER_TOOL, run_document_retriever
 
 
 class FinancialAgent(BaseAgent):
@@ -31,14 +31,14 @@ CRITICAL RULES:
 
     async def _dispatch_tool(self, tool_name: str, tool_input: dict, context: dict) -> str:
         if tool_name == "web_search":
-            results = run_web_search(tool_input["query"], tool_input.get("max_results", 5))
+            results = await run_web_search(tool_input["query"], tool_input.get("max_results", 5))
             return "\n\n".join(
                 f"[{r['title']}]({r['url']})\n{r['content']}" for r in results
             )
         if tool_name == "document_retriever":
-            chunks = await context.get("rag_retrieve")(
+            return await run_document_retriever(
+                context.get("rag_retrieve"),
                 query=tool_input["query"],
                 top_k=tool_input.get("top_k", 5),
             )
-            return format_retrieval_results(chunks)
         return f"Unknown tool: {tool_name}"

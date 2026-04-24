@@ -187,20 +187,28 @@ function SectionCard({ section }: { section: SectionReport }) {
 export default function ReportPage() {
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<ReportStatusResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [polling, setPolling] = useState(true);
 
   const fetchReport = useCallback(async () => {
     try {
+      setLoadError("");
       const res = await getReport(id);
       setData(res);
+      setLoading(false);
       if (res.status === "completed" || res.status === "failed") {
         setPolling(false);
       }
-    } catch {}
+    } catch (err: unknown) {
+      setLoading(false);
+      setLoadError(err instanceof Error ? err.message : "Failed to load report.");
+      setPolling(false);
+    }
   }, [id]);
 
   useEffect(() => {
-    fetchReport();
+    void fetchReport();
   }, [fetchReport]);
 
   useEffect(() => {
@@ -209,12 +217,26 @@ export default function ReportPage() {
     return () => clearInterval(interval);
   }, [polling, fetchReport]);
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
         <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
     );
+  }
+
+  if (loadError && !data) {
+    return (
+      <div className="max-w-xl mx-auto py-24">
+        <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl text-red-300 text-sm">
+          {loadError}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return null;
   }
 
   const { report, status, company_name, error } = data;
@@ -261,6 +283,12 @@ export default function ReportPage() {
       )}
 
       {/* Error */}
+      {loadError && data && (
+        <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl text-red-300 text-sm">
+          {loadError}
+        </div>
+      )}
+
       {status === "failed" && (
         <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl text-red-300 text-sm">
           {error || "Analysis failed. Please try again."}
@@ -271,7 +299,7 @@ export default function ReportPage() {
       {report && (
         <>
           <div className="space-y-4">
-            {report.sections.map((s) => (
+            {report.sections.map((s: SectionReport) => (
               <SectionCard key={s.section} section={s} />
             ))}
           </div>

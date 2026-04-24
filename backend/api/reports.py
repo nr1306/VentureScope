@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import ValidationError
 from sqlalchemy import select, desc, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_db
+from db.session import commit_with_retry, execute_with_retry, get_db
 from db.models import Report
 from models.report import ReportStatusResponse, DueDiligenceReport
 
@@ -11,14 +12,17 @@ router = APIRouter(tags=["reports"])
 
 @router.get("/report/{report_id}", response_model=ReportStatusResponse)
 async def get_report(report_id: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Report).where(Report.id == report_id))
+    result = await execute_with_retry(db, select(Report).where(Report.id == report_id))
     report = result.scalar_one_or_none()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
 
     full_report = None
     if report.status == "completed" and report.result:
-        full_report = DueDiligenceReport(**report.result)
+        try:
+            full_report = DueDiligenceReport(**report.result)
+        except ValidationError as exc:
+            raise HTTPException(status_code=500, detail="Stored report payload is invalid.") from exc
 
     return ReportStatusResponse(
         report_id=report.id,
@@ -32,8 +36,12 @@ async def get_report(report_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/reports", response_model=list[ReportStatusResponse])
-async def list_reports(limit: int = 20, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
+async def list_reports(
+    limit: int = Query(default=20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await execute_with_retry(
+        db,
         select(Report).order_by(desc(Report.created_at)).limit(limit)
     )
     reports = result.scalars().all()
@@ -52,15 +60,15 @@ async def list_reports(limit: int = 20, db: AsyncSession = Depends(get_db)):
 
 @router.delete("/report/{report_id}", status_code=204)
 async def delete_report(report_id: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Report).where(Report.id == report_id))
+    result = await execute_with_retry(db, select(Report).where(Report.id == report_id))
     report = result.scalar_one_or_none()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     await db.delete(report)
-    await db.commit()
+    await commit_with_retry(db)
 
 
 @router.delete("/reports", status_code=204)
 async def delete_all_reports(db: AsyncSession = Depends(get_db)):
-    await db.execute(delete(Report))
-    await db.commit()
+    await execute_with_retry(db, delete(Report))
+    await commit_with_retry(db)

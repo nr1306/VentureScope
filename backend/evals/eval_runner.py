@@ -6,12 +6,13 @@ Run directly:  python -m evals.eval_runner
 Run via API:   POST /api/eval/run
 """
 from __future__ import annotations
+import asyncio
 import json
 import uuid
 from pathlib import Path
 from datetime import datetime, timezone
 
-from db.session import AsyncSessionLocal
+from db.session import AsyncSessionLocal, commit_with_retry
 from db.models import EvalResult
 from agents.orchestrator import run_orchestrator
 from evals.metrics import compute_all_metrics
@@ -26,8 +27,7 @@ async def run_all_evals() -> list[dict]:
     golden_files = list(GOLDEN_DIR.glob("*.json"))
 
     for gf in golden_files:
-        with open(gf) as f:
-            golden = json.load(f)
+        golden = json.loads(await asyncio.to_thread(gf.read_text))
 
         company_name = golden["company_name"]
         ground_truth = golden["ground_truth"]
@@ -40,7 +40,7 @@ async def run_all_evals() -> list[dict]:
             async def noop_retrieve(query: str, top_k: int = 5):
                 return []
 
-            report = run_orchestrator(
+            report = await run_orchestrator(
                 report_id=report_id,
                 company_name=company_name,
                 rag_retrieve=noop_retrieve,
@@ -50,7 +50,7 @@ async def run_all_evals() -> list[dict]:
             metrics = compute_all_metrics(report, ground_truth)
 
             # LLM-as-judge
-            judge_scores = judge_report(report, ground_truth)
+            judge_scores = await judge_report(report, ground_truth)
 
             all_scores = {**metrics, "judge": judge_scores}
 
@@ -72,7 +72,7 @@ async def run_all_evals() -> list[dict]:
                     judge_feedback={k: v.get("feedback", "") for k, v in judge_scores.items()},
                 )
                 db.add(eval_result)
-                await db.commit()
+                await commit_with_retry(db)
 
             results.append({"company": company_name, "scores": all_scores})
 
@@ -84,5 +84,4 @@ async def run_all_evals() -> list[dict]:
 
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(run_all_evals())

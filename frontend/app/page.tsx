@@ -7,7 +7,7 @@ import {
   ReportStatusResponse, SectionReport, DueDiligenceReport,
 } from "@/lib/api";
 import { downloadJSON, downloadDOCX, downloadPDF } from "@/lib/download";
-import { deleteReport, deleteAllReports } from "@/lib/api";
+import { deleteReport } from "@/lib/api";
 import {
   Search, TrendingUp, DollarSign, Swords, AlertTriangle,
   Loader2, CheckCircle, XCircle, Clock, AlertCircle,
@@ -341,6 +341,9 @@ type Phase = "idle" | "analyzing" | "completed" | "failed";
 export default function HomePage() {
   const [company, setCompany] = useState("");
   const [inputError, setInputError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [historyError, setHistoryError] = useState("");
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("idle");
   const [reportId, setReportId] = useState<string | null>(null);
   const [reportData, setReportData] = useState<ReportStatusResponse | null>(null);
@@ -352,11 +355,19 @@ export default function HomePage() {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const refreshReports = useCallback(() => {
-    listReports().then(setAllReports).catch(() => {});
+  const refreshReports = useCallback(async () => {
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      setAllReports(await listReports());
+    } catch (err: unknown) {
+      setHistoryError(err instanceof Error ? err.message : "Failed to load analysis history.");
+    } finally {
+      setHistoryLoading(false);
+    }
   }, []);
 
-  useEffect(() => { refreshReports(); }, [refreshReports]);
+  useEffect(() => { void refreshReports(); }, [refreshReports]);
 
   const completedReports = allReports.filter((r) => r.status === "completed");
   const failedReports = allReports.filter((r) => r.status === "failed");
@@ -365,9 +376,12 @@ export default function HomePage() {
     e.preventDefault();
     e.stopPropagation();
     setDeletingId(id);
+    setActionError("");
     try {
       await deleteReport(id);
       setAllReports((prev) => prev.filter((r) => r.report_id !== id));
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to delete report.");
     } finally {
       setDeletingId(null);
     }
@@ -376,9 +390,12 @@ export default function HomePage() {
   async function handleClearAll(section: "completed" | "failed") {
     const ids = (section === "completed" ? completedReports : failedReports).map((r) => r.report_id);
     setClearingAll(true);
+    setActionError("");
     try {
       await Promise.all(ids.map((id) => deleteReport(id)));
       setAllReports((prev) => prev.filter((r) => !ids.includes(r.report_id)));
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to clear report history.");
     } finally {
       setClearingAll(false);
     }
@@ -394,19 +411,26 @@ export default function HomePage() {
   const pollReport = useCallback(async (id: string) => {
     try {
       const res = await getReport(id);
+      setInputError("");
       setReportData(res);
       if (res.status === "completed") {
         stopPolling();
         setPhase("completed");
         setShowBanner(true);
-        refreshReports();
+        void refreshReports();
         // Scroll to result
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
       } else if (res.status === "failed") {
         stopPolling();
         setPhase("failed");
       }
-    } catch {}
+    } catch (err: unknown) {
+      setInputError(
+        err instanceof Error
+          ? err.message
+          : "Unable to refresh analysis status right now.",
+      );
+    }
   }, [stopPolling, refreshReports]);
 
   useEffect(() => () => stopPolling(), [stopPolling]);
@@ -414,7 +438,9 @@ export default function HomePage() {
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
     if (!company.trim()) return;
+    stopPolling();
     setInputError("");
+    setActionError("");
     setPhase("analyzing");
     setReportData(null);
     setShowBanner(false);
@@ -422,6 +448,7 @@ export default function HomePage() {
       const res = await startAnalysis(company.trim());
       setReportId(res.report_id);
       pollingRef.current = setInterval(() => pollReport(res.report_id), 3000);
+      void pollReport(res.report_id);
     } catch (err: unknown) {
       setInputError(err instanceof Error ? err.message : "Something went wrong");
       setPhase("idle");
@@ -631,8 +658,33 @@ export default function HomePage() {
         </div>
       )}
 
+      {phase === "idle" && actionError && (
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center gap-3 px-4 py-3 bg-red-900/20 border border-red-700/60 rounded-xl text-sm text-red-300">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{actionError}</span>
+          </div>
+        </div>
+      )}
+
+      {phase === "idle" && historyLoading && (
+        <div className="max-w-lg mx-auto flex items-center justify-center gap-3 px-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl text-sm text-slate-400">
+          <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+          <span>Loading previous analyses…</span>
+        </div>
+      )}
+
+      {phase === "idle" && historyError && !historyLoading && (
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center gap-3 px-4 py-3 bg-red-900/20 border border-red-700/60 rounded-xl text-sm text-red-300">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{historyError}</span>
+          </div>
+        </div>
+      )}
+
       {/* ── History ─────────────────────────────────────────────────────── */}
-      {(completedReports.length > 0 || failedReports.length > 0) && phase === "idle" && (
+      {!historyLoading && (completedReports.length > 0 || failedReports.length > 0) && phase === "idle" && (
         <div className="max-w-4xl mx-auto space-y-6">
 
           {/* Completed reports */}

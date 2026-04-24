@@ -1,7 +1,11 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Literal, Any
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+_COMPANY_NAME_RE = re.compile(r"^[a-zA-Z0-9\s\.,\-&'\"()/]+$")
 
 
 class ToolCall(BaseModel):
@@ -51,7 +55,18 @@ class DueDiligenceReport(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
     company_name: str = Field(min_length=1, max_length=200)
+
+    @field_validator("company_name")
+    @classmethod
+    def validate_company_name(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Company name cannot be empty.")
+        if not _COMPANY_NAME_RE.fullmatch(value):
+            raise ValueError("Company name contains invalid characters.")
+        return value
 
 
 class AnalyzeResponse(BaseModel):

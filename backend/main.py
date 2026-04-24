@@ -3,16 +3,24 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import settings
 from db.session import engine, Base
 from api import analyze, reports, upload, evals
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Settings are validated at import time; accessing them here makes startup
+    # fail fast before serving traffic if a critical environment variable is missing.
+    settings.model_dump()
+
     # Tables are managed by Alembic; this is a fallback for local dev
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        yield
+    finally:
+        await engine.dispose()
 
 
 app = FastAPI(

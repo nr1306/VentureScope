@@ -29,7 +29,7 @@ CRITICAL RULES:
 
     async def _dispatch_tool(self, tool_name: str, tool_input: dict, context: dict) -> str:
         if tool_name == "web_search":
-            results = run_web_search(tool_input["query"], tool_input.get("max_results", 5))
+            results = await run_web_search(tool_input["query"], tool_input.get("max_results", 5))
             return "\n\n".join(
                 f"[{r['title']}]({r['url']})\n{r['content']}" for r in results
             )
