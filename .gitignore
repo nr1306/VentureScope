@@ -5,6 +5,7 @@
 
 # Claude context
 .claude
+CLAUDE.md
 
 # Python
 __pycache__/
